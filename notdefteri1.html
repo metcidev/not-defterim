@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini Not Defteri</title>
+
+<style>
+:root {
+    --bg: #0f0f0f;
+    --card: #1c1c1c;
+    --text: white;
+    --btn: #2a2a2a;
+}
+
+.light {
+    --bg: #f5f5f5;
+    --card: white;
+    --text: black;
+    --btn: #e0e0e0;
+}
+
+body {
+    margin: 0;
+    font-family: Arial;
+    background: var(--bg);
+    color: var(--text);
+    transition: 0.3s;
+}
+
+/* TOP BAR */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background: var(--card);
+    align-items: center;
+}
+
+/* SCREEN */
+.screen {
+    display: none;
+    padding: 15px;
+}
+
+.active {
+    display: block;
+}
+
+/* NOTE CARD */
+.note {
+    background: var(--card);
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* BUTTON */
+button {
+    background: var(--btn);
+    color: var(--text);
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    width: 100%;
+}
+
+/* INPUT */
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: none;
+    background: var(--card);
+    color: var(--text);
+}
+
+textarea {
+    height: 150px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HOME -->
+<div id="home" class="screen active">
+    <div class="topbar">
+        <b>📒 Not Defteri</b>
+        <button onclick="toggleTheme()">🌓</button>
+    </div>
+
+    <div id="list"></div>
+
+    <button onclick="openScreen('add')">➕ Yeni Not</button>
+</div>
+
+<!-- ADD -->
+<div id="add" class="screen">
+    <h3>Yeni Not</h3>
+
+    <input id="title" placeholder="Başlık">
+    <textarea id="text" placeholder="Not yaz..."></textarea>
+
+    <button onclick="saveNote()">💾 Kaydet</button>
+    <button onclick="openScreen('home')">⬅ Geri</button>
+</div>
+
+<!-- VIEW -->
+<div id="view" class="screen">
+    <h3 id="vtitle"></h3>
+    <p id="vtext"></p>
+
+    <button onclick="deleteNote()">🗑 Sil</button>
+    <button onclick="openScreen('home')">⬅ Geri</button>
+</div>
+
+<script>
+/* HER KULLANICIYA ÖZEL KAYIT */
+let userId = "user_" + (localStorage.getItem("uid") || Date.now());
+localStorage.setItem("uid", userId);
+
+/* DATA */
+let notes = JSON.parse(localStorage.getItem(userId) || "[]");
+let current = null;
+
+/* THEME */
+if(localStorage.getItem("theme") === "light"){
+    document.body.classList.add("light");
+}
+
+function toggleTheme(){
+    document.body.classList.toggle("light");
+    localStorage.setItem("theme",
+        document.body.classList.contains("light") ? "light" : "dark"
+    );
+}
+
+/* SCREEN */
+function openScreen(id){
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+    if(id === "home") render();
+}
+
+/* RENDER */
+function render(){
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    notes.forEach((n,i)=>{
+        list.innerHTML += `
+        <div class="note" onclick="view(${i})">
+            <b>${n.title}</b><br>
+            <small>${n.text.slice(0,40)}</small>
+        </div>`;
+    });
+}
+
+/* SAVE */
+function saveNote(){
+    let t = document.getElementById("title").value;
+    let x = document.getElementById("text").value;
+
+    if(!t || !x) return alert("Boş bırakma!");
+
+    notes.push({title:t, text:x});
+    localStorage.setItem(userId, JSON.stringify(notes));
+
+    document.getElementById("title").value = "";
+    document.getElementById("text").value = "";
+
+    openScreen("home");
+}
+
+/* VIEW */
+function view(i){
+    current = i;
+    document.getElementById("vtitle").innerText = notes[i].title;
+    document.getElementById("vtext").innerText = notes[i].text;
+    openScreen("view");
+}
+
+/* DELETE */
+function deleteNote(){
+    notes.splice(current,1);
+    localStorage.setItem(userId, JSON.stringify(notes));
+    openScreen("home");
+}
+
+render();
+</script>
+
+</body>
+</html>
